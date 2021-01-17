@@ -59,7 +59,7 @@ async def forget_user(user_id: int):
 
 async def send_message(user_id, text, inner=False):
     try:
-        await bot.send_message(user_id, text)
+        await bot.send_message(user_id, text, disable_web_page_preview=True)
         return True
     except exceptions.BotBlocked:
         logging.info(f"Target [ID:{user_id}]: blocked by user")
