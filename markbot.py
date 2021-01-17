@@ -98,8 +98,7 @@ async def broadcast(message: types.Message, text: str):
     # First get group admins, if there are not too many.
     try:
         admins = await bot.get_chat_administrators(message.chat.id)
-        admin_ids = [adm.user.id for adm in admins
-                     if adm.can_delete_messages and adm.is_member]
+        admin_ids = [adm.user.id for adm in admins]
         if len(admin_ids) <= config.MAX_ADMINS:
             ids.update(admin_ids)
     except exceptions.TelegramAPIError:
