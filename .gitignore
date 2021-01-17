@@ -1,0 +1,6 @@
+Pipfile*
+__pycache__/
+*.swp
+*.sqlite
+config.py
+venv/
