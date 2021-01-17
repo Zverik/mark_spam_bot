@@ -157,7 +157,7 @@ async def spam_not(message: types.Message):
 
 @dp.message_handler(commands='spam', chat_type=[ChatType.GROUP, ChatType.SUPERGROUP])
 async def mark_spam(message: types.Message):
-    sent = await broadcast(message, 'You have been summoned to delete spam:')
+    sent = await broadcast(message, 'You have been summoned to delete spam.')
     if sent:
         await message.answer('📨')
     else:
