@@ -120,7 +120,7 @@ async def broadcast(message: types.Message, text: str):
     return count > 0
 
 
-@dp.message_handler(commands=['start', 'help'], state='*')
+@dp.message_handler(commands=['start', 'help'], chat_type=[ChatType.PRIVATE])
 async def welcome(message: types.Message):
     await message.answer(
         'This bot listens to the /spam command in groups and '
@@ -128,38 +128,41 @@ async def welcome(message: types.Message):
         'status for every new user.\n\n'
         'Type /spamme in a group to subscribe, /spamnot to '
         'unsubscribe. This bot has no settings or other commands.\n\n'
-        'Powered by CAS: https://cas.chat/')
+        'Powered by <a href="https://cas.chat/">CAS</a>, '
+        'see source code <a href="https://github.com/Zverik/mark_spam_bot">on github</a>',
+        disable_web_page_preview=True
+    )
 
 
-@dp.message_handler(commands='spamme', state='*')
+@dp.message_handler(commands='spamme', chat_type=[ChatType.GROUP, ChatType.SUPERGROUP])
 async def spam_me(message: types.Message):
     if message.chat.type in (ChatType.GROUP, ChatType.SUPERGROUP):
         db = await get_db()
         await db.execute("insert or ignore into admins (user_id, chat_id) values (?, ?)",
                          (message.from_user.id, message.chat.id))
         await db.commit()
-        await message.reply('👍')
-    else:
-        await message.answer('Subscribing in private is not yet supported.')
+        await bot.send_message(
+            message.from_user.id,
+            "You've been subscribed to events in \"{message.chat.title}\".")
 
 
-@dp.message_handler(commands='spamnot', state='*')
+@dp.message_handler(commands='spamnot', chat_type=[ChatType.GROUP, ChatType.SUPERGROUP])
 async def spam_not(message: types.Message):
     if message.chat.type in (ChatType.GROUP, ChatType.SUPERGROUP):
         db = await get_db()
         await db.execute("delete from admins where user_id = ? and chat_id = ?",
                          (message.from_user.id, message.chat.id))
         await db.commit()
-        await message.reply('🆗')
-    else:
-        await message.answer('Unsubscribing in private is not yet supported.')
+        await bot.send_message(
+            message.from_user.id,
+            "No more notifications from \"{message.chat.title}\".")
 
 
 @dp.message_handler(commands='spam', chat_type=[ChatType.GROUP, ChatType.SUPERGROUP])
 async def mark_spam(message: types.Message):
     sent = await broadcast(message, 'You have been summoned to delete spam.')
     if sent:
-        await message.answer('📨')
+        await message.reply('📨')
     else:
         await message.answer('Please ask your admins to type /spamme.')
 
