@@ -143,7 +143,7 @@ async def spam_me(message: types.Message):
         await db.commit()
         await bot.send_message(
             message.from_user.id,
-            "You've been subscribed to events in \"{message.chat.title}\".")
+            f"You've been subscribed to events in \"{message.chat.title}\".")
 
 
 @dp.message_handler(commands='spamnot', chat_type=[ChatType.GROUP, ChatType.SUPERGROUP])
@@ -155,7 +155,7 @@ async def spam_not(message: types.Message):
         await db.commit()
         await bot.send_message(
             message.from_user.id,
-            "No more notifications from \"{message.chat.title}\".")
+            f"No more notifications from \"{message.chat.title}\".")
 
 
 @dp.message_handler(commands='spam', chat_type=[ChatType.GROUP, ChatType.SUPERGROUP])
