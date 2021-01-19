@@ -3,9 +3,9 @@ import logging
 import aiosqlite
 import config
 import aiohttp
+import asyncio
 from aiogram import Bot, Dispatcher, executor, types, exceptions
 from aiogram.types import ChatType, ContentType
-from asyncio import sleep
 
 
 logging.basicConfig(level=logging.INFO)
@@ -44,6 +44,8 @@ async def test_spammer(user: types.User) -> bool:
     url = f'https://api.cas.chat/check?user_id={user.id}'
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
+            logging.info('Testing user "%s": %s %s', user.full_name,
+                         response.status, await response.text())
             if response.status == 200:
                 data = await response.json()
                 if data.get('ok') and 'result' in data:
@@ -73,7 +75,7 @@ async def send_message(user_id, text, inner=False):
     except exceptions.RetryAfter as e:
         if not inner:
             logging.info(f"Flood limit is exceeded. Sleep {e.timeout} seconds.")
-            await sleep(e.timeout)
+            await asyncio.sleep(e.timeout)
             return await send_message(user_id, text, True)
         else:
             logging.info(f"Flood limit is again exceeded. Needs {e.timeout} more seconds.")
@@ -116,7 +118,7 @@ async def broadcast(message: types.Message, text: str):
     for user_id in ids:
         if await send_message(user_id, content):
             count += 1
-        await sleep(0.05)
+        await asyncio.sleep(0.05)
     return count > 0
 
 
@@ -143,7 +145,8 @@ async def spam_me(message: types.Message):
         await db.commit()
         await bot.send_message(
             message.from_user.id,
-            f"You've been subscribed to events in \"{message.chat.title}\".")
+            f"You've been subscribed to events in \"{message.chat.title}\". "
+            "Send /spamnot to the group to unsubscribe.")
 
 
 @dp.message_handler(commands='spamnot', chat_type=[ChatType.GROUP, ChatType.SUPERGROUP])
@@ -158,11 +161,17 @@ async def spam_not(message: types.Message):
             f"No more notifications from \"{message.chat.title}\".")
 
 
+async def delete_timeout(chat_id: int, message_id: int, timeout_sec: int = 30):
+    await asyncio.sleep(timeout_sec)
+    await bot.delete_message(chat_id, message_id)
+
+
 @dp.message_handler(commands='spam', chat_type=[ChatType.GROUP, ChatType.SUPERGROUP])
 async def mark_spam(message: types.Message):
     sent = await broadcast(message, 'You have been summoned to delete spam.')
     if sent:
-        await message.reply('📨')
+        msg = await message.reply('🔜')
+        asyncio.create_task(delete_timeout(msg.chat.id, msg.message_id))
     else:
         await message.answer('Please ask your admins to type /spamme.')
 
