@@ -163,14 +163,20 @@ async def spam_not(message: types.Message):
 
 async def delete_timeout(chat_id: int, message_id: int, timeout_sec: int = 30):
     await asyncio.sleep(timeout_sec)
-    await bot.delete_message(chat_id, message_id)
+    try:
+        await bot.delete_message(chat_id, message_id)
+    except exceptions.TelegramAPIError:
+        pass
 
 
 @dp.message_handler(commands='spam', chat_type=[ChatType.GROUP, ChatType.SUPERGROUP])
 async def mark_spam(message: types.Message):
     sent = await broadcast(message, 'You have been summoned to delete spam.')
     if sent:
-        msg = await message.reply('🔜')
+        try:
+            msg = await message.reply('🔜')
+        except exceptions.TelegramAPIError:
+            pass
         asyncio.create_task(delete_timeout(msg.chat.id, msg.message_id))
     else:
         await message.answer('Please ask your admins to type /spamme.')
