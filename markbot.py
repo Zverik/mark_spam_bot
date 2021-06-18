@@ -132,7 +132,7 @@ async def welcome(message: types.Message):
         'unsubscribe. This bot has no settings or other commands.\n\n'
         'Powered by <a href="https://cas.chat/">CAS</a>, '
         'see source code <a href="https://github.com/Zverik/mark_spam_bot">on github</a>',
-        disable_web_page_preview=True
+        disable_web_page_preview=True, parse_mode='HTML'
     )
 
 
